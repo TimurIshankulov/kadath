@@ -1,5 +1,49 @@
 {% extends "base.html" %}
 
 {% block content %}
+<br>
 
+<div class="row">
+    <div id="notesList" class="list-group col-4"></div>
+    <div id="noteView" class="label col-6">Some text here</div>
+</div>
+
+<script>
+    window.onload = function () {
+        var elNotesList = document.getElementById("notesList");
+        var notesList = getNotes();
+        for (const note of notesList) {
+            elNotesList.innerHTML += `<a id="note_${note["id"]}" href="#" onclick="getNoteByID(${note["id"]});return false;"
+                                      class="list-group-item list-group-item-action flex-column align-items-start">
+                                      <div class="d-flex w-100 justify-content-between">
+                                      <h5 class="mb-1">${note["name"]}</h5>
+                                      <small>3 days ago</small>
+                                      </div>
+                                      <p class="mb-1">${note["text"]} </p>
+                                      <small>small description</small>
+                                      </a>`
+        }
+    }
+
+    function httpGet(url) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url, false);
+        xhr.send();
+        return JSON.parse(xhr.response);
+    }
+
+    function getNotes() {
+        var labelText = document.getElementById('label1');
+        var notesJSON = httpGet('/kadath/notes');
+        return notesJSON;
+    }
+
+
+    function getNoteByID(noteID) {
+        var note = httpGet('/kadath/note/' + noteID);
+        var elNoteText = document.getElementById('noteView');
+        elNoteText.innerHTML = note['text']
+    }
+
+</script>
 {% endblock %}
