@@ -1,20 +1,31 @@
-from flask import Flask, render_template, request, make_response, session, flash, redirect, url_for, Response
-from flask_bootstrap import Bootstrap
 import datetime
-import os
 import json
+import os
 from shutil import copyfile
-import config
+
+from flask import (Flask, Response, flash, make_response, redirect,
+                   render_template, request, session, url_for)
+from flask_bootstrap import Bootstrap
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+from config import conn_string, flask_secret_key
 from forms import LoginForm
+from models.kadath_model import Base, KadathNote
 
 base_template = 'base.html'
 login_template = 'login.html'
 kadath_template = 'kadath.html'
 
 app = Flask(__name__)
-app.secret_key = config.flask_secret_key
+app.secret_key = flask_secret_key
 app.permanent_session_lifetime = datetime.timedelta(days=365)
 Bootstrap(app)
+
+engine_kadath = create_engine(conn_string)
+Base.metadata.bind = engine_kadath
+DBSession_kadath = sessionmaker(bind=engine_kadath)
+session = DBSession_kadath()
 
 
 def to_json(data):
@@ -54,19 +65,13 @@ def kadath():
 
 @app.route('/kadath/notes', methods=['GET'])
 def get_notes():
-    with open('notes/notes.json', 'r') as f:
-        data = json.load(f)
-    return resp(200, data)
+    notes = session.query(KadathNote).all()
+    return resp(200, notes)
 
 
 @app.route('/kadath/note/<int:note_id>', methods=['GET'])
 def get_note(note_id):
-    with open('notes/notes.json', 'r') as f:
-        data = json.load(f)
-    for record in data:
-        if record['id'] == note_id:
-            note = record
-            break
+    note = session.query(KadathNote).filter_by(id=note_id).first()
     return note
 
 
