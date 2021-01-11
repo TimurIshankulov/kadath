@@ -2,10 +2,22 @@
 
 {% block content %}
 <br>
+<div class="row">
+    <button id="buttonNewNote" class="btn btn-outline-success" onclick="createNewNote()">New Note</button>
+</div>
 
 <div class="row">
     <div id="notesList" class="list-group col-4"></div>
-    <div id="noteView" class="label col-6"></div>
+    <div class="col">
+        <div id="titleLabel">Title</div>
+        <input id="noteTitle" class="label form-control mt-1 col-8">
+        <div id="titleLabel" class="label">Text</div>
+        <textarea id="textEditor" class="form-control col-8" rows="15"></textarea>
+        <div class="row mt-2 ml-auto">
+            <button id="buttonSave" class="btn btn-outline-success" onclick="saveNote()">Save</button>
+            <button id="buttonCancel" class="btn btn-outline-secondary ml-2" onclick="cancelSaveNote()">Cancel</button>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -47,6 +59,18 @@
         var note = httpGet('/kadath/note/' + noteID);
         var elNoteText = document.getElementById('noteView');
         elNoteText.innerHTML = note['text']
+    }
+
+    function createNewNote() {
+
+    }
+
+    function saveNote() {
+
+    }
+
+    function cancelSaveNote() {
+
     }
 
 </script>
