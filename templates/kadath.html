@@ -5,15 +5,16 @@
 
 <div class="row">
     <div id="notesList" class="list-group col-4"></div>
-    <div id="noteView" class="label col-6">Some text here</div>
+    <div id="noteView" class="label col-6"></div>
 </div>
 
 <script>
     window.onload = function () {
         var elNotesList = document.getElementById("notesList");
         var notesList = getNotes();
-        for (const note of notesList) {
-            elNotesList.innerHTML += `<a id="note_${note["id"]}" href="#" onclick="getNoteByID(${note["id"]});return false;"
+        if (Array.isArray(notesList) && notesList.length) {
+            for (const note of notesList) {
+                elNotesList.innerHTML += `<a id="note_${note["id"]}" href="#" onclick="getNoteByID(${note["id"]});return false;"
                                       class="list-group-item list-group-item-action flex-column align-items-start">
                                       <div class="d-flex w-100 justify-content-between">
                                       <h5 class="mb-1">${note["name"]}</h5>
@@ -22,6 +23,9 @@
                                       <p class="mb-1">${note["text"]} </p>
                                       <small>small description</small>
                                       </a>`
+            }
+        } else {
+            elNotesList.innerHTML = 'You do not have any notes yet'
         }
     }
 
