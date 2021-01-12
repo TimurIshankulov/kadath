@@ -34,6 +34,7 @@ class KadathNote(Base):
         note_dict['text'] = self.text
         note_dict['created'] = self.created
         note_dict['modified'] = self.modified
+        return note_dict
 
      #====== Table options ======#
 
