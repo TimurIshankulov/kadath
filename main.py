@@ -75,6 +75,21 @@ def get_note(note_id):
     return note
 
 
+@app.route('/kadath/note/save', methods=['POST'])
+def save_note():
+    note_dict = {}
+    #note_dict['id'] = request.args.get('note_id')
+    note_dict['title'] = request.args.get('title')
+    note_dict['text'] = request.args.get('text')
+    try:
+        note = KadathNote(note_dict)
+        session.add(note)
+        session.commit()
+    except Exception:
+        session.rollback()
+    return resp(200, note_dict)
+
+
 if __name__ == "__main__":
     app.debug = True
     app.run()

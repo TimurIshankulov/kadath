@@ -48,8 +48,14 @@
         return JSON.parse(xhr.response);
     }
 
+    function httpPost(url) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', url, false);
+        xhr.send();
+    }
+
     function getNotes() {
-        var labelText = document.getElementById('label1');
+        //var labelText = document.getElementById('label1');
         var notesJSON = httpGet('/kadath/notes');
         return notesJSON;
     }
@@ -66,7 +72,9 @@
     }
 
     function saveNote() {
-
+        var elNoteTitle = document.getElementById('noteTitle').value;
+        var elNoteText = document.getElementById('textEditor').value;
+        httpPost('/kadath/note/save?title=' + elNoteTitle + '&text=' + elNoteText);
     }
 
     function cancelSaveNote() {
