@@ -66,6 +66,7 @@ def kadath():
 @app.route('/kadath/notes', methods=['GET'])
 def get_notes():
     notes = session.query(KadathNote).all()
+    notes = [note.to_dict() for note in notes]
     return resp(200, notes)
 
 
