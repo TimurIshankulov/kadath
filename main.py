@@ -73,7 +73,7 @@ def get_notes():
 @app.route('/kadath/note/<int:note_id>', methods=['GET'])
 def get_note(note_id):
     note = session.query(KadathNote).filter_by(id=note_id).first()
-    return note
+    return note.to_dict()
 
 
 @app.route('/kadath/note/save', methods=['POST'])
@@ -86,8 +86,12 @@ def save_note():
         note = KadathNote(note_dict)
         session.add(note)
         session.commit()
+        session.refresh(note)
     except Exception:
         session.rollback()
+    finally:
+        session.close()
+    note_dict['id'] = note.id
     return resp(200, note_dict)
 
 
