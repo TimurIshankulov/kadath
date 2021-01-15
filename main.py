@@ -76,6 +76,18 @@ def get_note(note_id):
     return note.to_dict()
 
 
+@app.route('/kadath/note/delete/<int:note_id>', methods=['DELETE'])
+def delete_note(note_id):
+    note = session.query(KadathNote).filter_by(id=note_id).first()
+    if note is not None:
+        session.delete(note)
+        session.commit()
+    else:
+        session.close()
+    return resp(200, {'message': f'Note with id {note_id} was successfully deleted.'})
+
+
+
 @app.route('/kadath/note/save', methods=['POST'])
 def save_note():
     note_dict = {}
