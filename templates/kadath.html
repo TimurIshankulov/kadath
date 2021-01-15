@@ -3,33 +3,47 @@
 {% block content %}
 <br>
 <div class="row">
-    <button id="buttonNewNote" class="btn btn-outline-success" onclick="createNewNote()">New Note</button>
+    <button id="buttonNewNote" class="btn btn-outline-success mb-2" onclick="createNewNote()">New Note</button>
 </div>
 
 <div class="row">
     <div id="notesList" class="list-group col-4"></div>
     <div class="col">
+        <div class="row ml-auto">
+            <div id="IDLabel">ID</div>
+            <div id="noteID" class="label ml-2"></div>
+        </div>
         <div id="titleLabel">Title</div>
         <input id="noteTitle" class="label form-control mt-1 col-8">
         <div id="titleLabel" class="label">Text</div>
-        <textarea id="textEditor" class="form-control col-8" rows="15"></textarea>
-        <div class="row mt-2 ml-auto">
-            <button id="buttonSave" class="btn btn-outline-success" onclick="saveNote()">Save</button>
-            <button id="buttonCancel" class="btn btn-outline-secondary ml-2" onclick="cancelSaveNote()">Cancel</button>
+        <textarea id="noteText" class="form-control col-8" rows="15"></textarea>
+        <div class="row mt-2">
+            <div class="col-5">
+                <button id="buttonDelete" class="btn btn-outline-danger mr-auto" onclick="deleteNote()">Delete</button>
+            </div>
+            <div class="col-3">
+                <div class="d-flex row btn-group">
+                    <button id="buttonCancel" class="btn btn-outline-dark" onclick="cancelSaveNote()">Cancel</button>
+                    <button id="buttonSave" class="btn btn-outline-success mr-1" onclick="saveNote()">Save</button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    window.onload = function () {
+    window.onload = showNoteList()
+
+    function showNoteList() {
         var elNotesList = document.getElementById("notesList");
+        elNotesList.innerHTML = ""
         var notesList = getNotes();
         if (Array.isArray(notesList) && notesList.length) {
             for (const note of notesList) {
                 elNotesList.innerHTML += `<a id="note_${note["id"]}" href="#" onclick="getNoteByID(${note["id"]});return false;"
                                       class="list-group-item list-group-item-action flex-column align-items-start">
                                       <div class="d-flex w-100 justify-content-between">
-                                      <h5 class="mb-1">${note["name"]}</h5>
+                                      <h5 class="mb-1">${note["title"]}</h5>
                                       <small>3 days ago</small>
                                       </div>
                                       <p class="mb-1">${note["text"]} </p>
@@ -52,10 +66,10 @@
         var xhr = new XMLHttpRequest();
         xhr.open('POST', url, false);
         xhr.send();
+        return JSON.parse(xhr.response);
     }
 
     function getNotes() {
-        //var labelText = document.getElementById('label1');
         var notesJSON = httpGet('/kadath/notes');
         return notesJSON;
     }
@@ -63,18 +77,30 @@
 
     function getNoteByID(noteID) {
         var note = httpGet('/kadath/note/' + noteID);
-        var elNoteText = document.getElementById('noteView');
-        elNoteText.innerHTML = note['text']
+        var elNoteTitle = document.getElementById('noteTitle');
+        var elNoteText = document.getElementById('noteText');
+        var elNoteID = document.getElementById('noteID');
+        elNoteTitle.value = note['title'];
+        elNoteText.value = note['text'];
+        elNoteID.innerHTML = note['id'];
     }
 
     function createNewNote() {
-
+        var elNoteTitle = document.getElementById('noteTitle');
+        var elNoteText = document.getElementById('noteText');
+        var elNoteID = document.getElementById('noteID');
+        elNoteTitle.value = '';
+        elNoteText.value = '';
+        elNoteID.innerHTML = '';
     }
 
     function saveNote() {
-        var elNoteTitle = document.getElementById('noteTitle').value;
-        var elNoteText = document.getElementById('textEditor').value;
-        httpPost('/kadath/note/save?title=' + elNoteTitle + '&text=' + elNoteText);
+        var noteTitle = document.getElementById('noteTitle').value;
+        var noteText = document.getElementById('noteText').value;
+        var response = httpPost('/kadath/note/save?title=' + noteTitle + '&text=' + noteText);
+        var elNoteID = document.getElementById('noteID');
+        elNoteID.innerHTML = response['id'];
+        showNoteList();
     }
 
     function cancelSaveNote() {
