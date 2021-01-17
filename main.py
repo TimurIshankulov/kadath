@@ -1,10 +1,8 @@
 import datetime
 import json
-import os
-from shutil import copyfile
 
-from flask import (Flask, Response, flash, make_response, redirect,
-                   render_template, request, session, url_for)
+from flask import (Flask, Response, flash, redirect, render_template, request,
+                   url_for)
 from flask_bootstrap import Bootstrap
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -87,23 +85,25 @@ def delete_note(note_id):
     return resp(200, {'message': f'Note with id {note_id} was successfully deleted.'})
 
 
-
 @app.route('/kadath/note/save', methods=['POST'])
 def save_note():
-    note_dict = {}
-    #note_dict['id'] = request.args.get('note_id')
-    note_dict['title'] = request.args.get('title')
-    note_dict['text'] = request.args.get('text')
+    note_dict = request.get_json()
     try:
-        note = KadathNote(note_dict)
-        session.add(note)
-        session.commit()
-        session.refresh(note)
+        if note_dict.get('id', None) is None:
+            note = KadathNote(note_dict)
+            session.add(note)
+            session.commit()
+            session.refresh(note)
+            note_dict['id'] = note.id
+        else:
+            note = session.query(KadathNote).filter_by(id=note_dict['id']).first()
+            note.title = note_dict['title']
+            note.text = note_dict['text']
+            session.commit()
     except Exception:
         session.rollback()
     finally:
         session.close()
-    note_dict['id'] = note.id
     return resp(200, note_dict)
 
 
