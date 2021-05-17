@@ -3,7 +3,7 @@ import os
 import sys
 
 from sqlalchemy import Column, ForeignKey, Integer, String, Text, create_engine
-from sqlalchemy.dialects.mysql import MEDIUMTEXT, TIMESTAMP
+from sqlalchemy.dialects.mysql import MEDIUMTEXT, TIMESTAMP, DATETIME
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -13,6 +13,7 @@ sys.path.append(parent_dir)
 from config import conn_string
 
 Base = declarative_base()
+
 
 class KadathNote(Base):
 
@@ -26,14 +27,13 @@ class KadathNote(Base):
     def __str__(self):
         return '[{self.id}] Title: {self.title}'.format(self=self)
 
-    
     def to_dict(self):
         note_dict = {}
         note_dict['id'] = self.id
         note_dict['title'] = self.title
         note_dict['text'] = self.text
-        note_dict['created'] = self.created
-        note_dict['modified'] = self.modified
+        note_dict['created'] = str(self.created)
+        note_dict['modified'] = str(self.modified)
         return note_dict
 
      #====== Table options ======#
@@ -43,8 +43,8 @@ class KadathNote(Base):
     id = Column(Integer(), primary_key=True, nullable=False)
     title = Column(String(300))
     text = Column(MEDIUMTEXT())
-    created = Column(TIMESTAMP())
-    modified = Column(TIMESTAMP())
+    created = Column(DATETIME())
+    modified = Column(DATETIME())
 
 
 engine = create_engine(conn_string)
