@@ -66,18 +66,19 @@
         var notesList = getNotes();
         if (Array.isArray(notesList) && notesList.length) {
             for (const note of notesList) {
-                elNotesList.innerHTML += `<a id="note_${note["id"]}" href="#" onclick="getNoteByID(${note["id"]});return false;"
+                var diffString = datetimeDiffPretty(note['modified'])
+                elNotesList.innerHTML += `<a id="note_${note['id']}" href="#" onclick="getNoteByID(${note['id']});return false;"
                                       class="list-group-item list-group-item-action flex-column align-items-start">
                                       <div class="d-flex w-100 justify-content-between">
-                                      <h5 class="mb-1">${note["title"]}</h5>
-                                      <small>3 days ago</small>
+                                      <h5 class="mb-1">${note['title']}</h5>
+                                      <small>${diffString}</small>
                                       </div>
-                                      <p class="mb-1 crop-text-3">${note["text"]} </p>
-                                      <small>small description</small>
+                                      <p class="mb-1 crop-text-3">${note['text']} </p>
+                                      <small>${note['created']}</small>
                                       </a>`
             }
         } else {
-            elNotesList.innerHTML = 'You do not have any notes yet'
+            elNotesList.innerHTML = 'You do not have any notes yet';
         }
     }
 
@@ -110,6 +111,95 @@
         xhr.open('DELETE', url, false);
         xhr.send();
         return JSON.parse(xhr.response);
+    }
+
+    function stringFromDatetime(datetime = null) {
+        if (datetime == null) {
+            var moment = new Date();
+        }
+        else {
+            var moment = datetime;
+        }
+        
+        var year = moment.getFullYear();
+        var month = moment.getMonth() + 1;
+        var day = moment.getDate();
+        var hour = moment.getHours();
+        var minute = moment.getMinutes();
+        var second = moment.getSeconds();
+        if (month.toString().length == 1) {
+            month = '0' + month;
+        }
+        if (day.toString().length == 1) {
+            day = '0' + day;
+        }
+        if (hour.toString().length == 1) {
+            hour = '0' + hour;
+        }
+        if (minute.toString().length == 1) {
+            minute = '0' + minute;
+        }
+        if (second.toString().length == 1) {
+            second = '0' + second;
+        }
+        var dateTime = year + '.' + month + '.' + day + ' ' + hour + ':' + minute + ':' + second;
+        return dateTime;
+    }
+
+    function datetimeFromString(datetimeStr) {
+        if (datetimeStr == 'None') {
+            return;
+        }
+        date = datetimeStr.split(' ')[0];
+        time = datetimeStr.split(' ')[1];
+        datetime = new Date(date.split('-')[0], date.split('-')[1] - 1, date.split('-')[2],
+                            time.split(':')[0], time.split(':')[1], time.split(':')[2]);
+        return datetime;
+    }
+
+    function datetimeDiffPretty(modified) {
+        if (typeof modified === 'string') {
+            modified = datetimeFromString(modified)
+        }
+        var now = new Date();
+        diffSeconds = Math.floor((now - modified) / 1000);
+        diffMinutes = Math.floor(diffSeconds / 60);
+        diffHours = Math.floor(diffMinutes / 60);
+        diffDays = Math.floor(diffHours / 24);
+        diffWeeks = Math.floor(diffDays / 7);
+        diffMonths = Math.floor(diffDays / 30);
+        diffYears = Math.floor(diffDays / 365);
+
+        if (diffMinutes == 0) {
+            prettyString = 'less than a minute ago';
+        } else if (diffMinutes <= 5) {
+            prettyString = 'a few minutes ago';
+        } else if (diffMinutes <= 59) {
+            prettyString = diffMinutes.toString() + ' minutes ago';
+        } else if (diffHours <= 1) {
+            prettyString = 'one hour ago';
+        } else if (diffHours <= 23) {
+            prettyString = diffHours.toString() + ' hours ago';
+        } else if (diffDays <= 1) {
+            prettyString = 'one day ago';
+        } else if (diffDays <= 6) {
+            prettyString = diffDays.toString() + ' days ago';
+        } else if (diffWeeks <= 1) {
+            prettyString = 'one week ago';
+        } else if (diffWeeks <= 5) {
+            prettyString = diffWeeks.toString() + ' weeks ago';
+        } else if (diffMonths <= 1) {
+            prettyString = 'one month ago';
+        } else if (diffMonths <= 11) {
+            prettyString = diffMonths.toString() + ' months ago';
+        } else if (diffYears <= 1) {
+            prettyString = 'one year ago';
+        } else if (diffYears <= 10) {
+            prettyString = diffYears.toString() + ' years ago';
+        } else {
+            prettyString = 'a long long time ago';
+        }
+        return prettyString;
     }
 
     function resetNoteForm() {
@@ -150,15 +240,20 @@
         var noteTitle = document.getElementById('noteTitle').value;
         var noteText = document.getElementById('noteText').value;
         var elNoteID = document.getElementById('noteID');
-        var data = {}
+        var data = {};
 
         if (elNoteID.innerHTML != '') {
             data['id'] = elNoteID.innerHTML;
         }
+        else {
+            data['created'] = stringFromDatetime();
+        }
+
         data['title'] = noteTitle;
         data['text'] = noteText;
+        data['modified'] = stringFromDatetime();
 
-        var response = httpPostJSON('/kadath/note/save', data)
+        var response = httpPostJSON('/kadath/note/save', data);
         elNoteID.innerHTML = response['id'];
         showNoteList();
     }
