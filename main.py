@@ -1,5 +1,6 @@
 import datetime
 import json
+import sys
 
 from flask import (Flask, Response, flash, redirect, render_template, request,
                    url_for)
@@ -99,8 +100,10 @@ def save_note():
             note = session.query(KadathNote).filter_by(id=note_dict['id']).first()
             note.title = note_dict['title']
             note.text = note_dict['text']
+            note.modified = note_dict['modified']
             session.commit()
     except Exception:
+        print(sys.exc_info()[1])
         session.rollback()
     finally:
         session.close()
