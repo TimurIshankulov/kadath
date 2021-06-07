@@ -8,12 +8,14 @@ from flask_bootstrap import Bootstrap
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from config import conn_string, flask_secret_key
-from forms import LoginForm
-from models.kadath_model import Base, KadathNote
+from config import conn_string, flask_secret_key, registration_secret
+from forms import LoginForm, SignUpForm
+from models.kadath_model import Base, KadathNote, User, Authentication
 
 base_template = 'base.html'
+home_template = 'home.html'
 login_template = 'login.html'
+signup_template = 'signup.html'
 kadath_template = 'kadath.html'
 
 app = Flask(__name__)
@@ -41,20 +43,61 @@ def resp(code, data):
 
 @app.route('/')
 def index():
-    return redirect(url_for('login'))
+    return render_template(home_template, title='Home')
 
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        if form.username.data == 'test' and form.password.data == 'test':
-            flash('Выполнен вход пользователя test', 'success')
-            return redirect(url_for('kadath'))
-        else:
-            flash('Неверное имя пользователя и пароль', 'danger')
+        user = session.query(User).filter_by(email=form.email.data).first()
+        if user is None:
+            flash('Incorrect credentials', 'danger')
             return redirect(url_for('login'))
+        else:
+            user_dict = user.to_dict()
+            if user_dict['password'] == form.password.data:
+                flash('Sign in successful', 'success')
+                return redirect(url_for('kadath'))
     return render_template(login_template, title='Sign In', form=form)
+
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    form = SignUpForm()
+    if form.validate_on_submit():
+        if form.registration_secret.data == registration_secret:
+            if form.repeat_password.data == form.password.data:
+                user_dict = {'email': form.email.data,
+                             'password': form.password.data,
+                             'firstname': form.firstname.data,
+                             'lastname': form.lastname.data}
+                try:
+                    user = session.query(User).filter_by(email=user_dict['email']).first()
+                    if user is None:
+                        user = User(user_dict)
+                        session.add(user)
+                        session.commit()
+                        session.refresh(user)
+                    else:
+                        session.close()
+                        flash('User already exists', 'danger')
+                        return redirect(url_for('signup'))
+                except Exception:
+                    print(sys.exc_info()[1])
+                    session.rollback()
+                else:
+                    flash('Registration successful', 'success')
+                    return redirect(url_for('kadath'))
+                finally:
+                    session.close()
+            else:
+                flash('Passwords did not match', 'danger')
+                return redirect(url_for('signup'))
+        else:
+            flash('Invalid Registration Secret', 'danger')
+            return redirect(url_for('signup'))
+    return render_template(signup_template, title='Sign Up', form=form)
 
 
 @app.route('/kadath', methods=['GET', 'POST'])
