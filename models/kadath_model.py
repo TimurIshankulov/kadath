@@ -43,7 +43,7 @@ class KadathNote(Base):
     __tablename__ = 'notes'
 
     id = Column(Integer(), primary_key=True, nullable=False)
-    user_id = Column(Integer, ForeignKey('users.id'))
+    user_id = Column(Integer(), ForeignKey('users.id'))
     title = Column(String(300))
     text = Column(MEDIUMTEXT())
     created = Column(DATETIME())
@@ -76,8 +76,8 @@ class User(Base):
     __tablename__ = 'users'
 
     id = Column(Integer(), primary_key=True, nullable=False)
-    authentications = relationship("Authentication")
-    notes = relationship("KadathNote")
+    authentications = relationship('Authentication')
+    notes = relationship('KadathNote')
     email = Column(String(100))
     password = Column(String(100))
     firstname = Column(String(100))
@@ -99,7 +99,7 @@ class Authentication(Base):
         note_dict = {}
         note_dict['id'] = self.id
         note_dict['user_id'] = self.user_id
-        note_dict['auth_key'] = self.email
+        note_dict['auth_key'] = self.auth_key
         return note_dict
 
     # ====== Table options ====== #
@@ -107,7 +107,7 @@ class Authentication(Base):
     __tablename__ = 'authentications'
 
     id = Column(Integer(), primary_key=True, nullable=False)
-    user_id = Column(Integer, ForeignKey('users.id'))
+    user_id = Column(Integer(), ForeignKey('users.id'))
     auth_key = Column(String(100))
 
 
