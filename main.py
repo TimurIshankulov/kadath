@@ -3,6 +3,10 @@ import json
 import sys
 import uuid
 
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
 from flask import (Flask, Response, flash, redirect, render_template, request,
                    url_for, make_response, session)
 from flask_bootstrap import Bootstrap
@@ -10,6 +14,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from config import conn_string, flask_secret_key, registration_secret
+from config import smtp_address_from, smtp_password, smtp_server, smtp_port, smtp_encryption, registration_subject, registration_html
 from forms import LoginForm, SignUpForm
 from models.kadath_model import Base, KadathNote, User, Authentication
 
@@ -71,6 +76,29 @@ def get_user_id_by_auth_key(auth_key):
         db_session.close()
     return None
 
+
+def send_registration_email(smtp_address_to):
+    email = MIMEMultipart()
+    email['From']    = smtp_address_from
+    email['To']      = smtp_address_to
+    email['Subject'] = registration_subject
+    email.attach(MIMEText(registration_html, 'html', 'utf-8'))
+
+    try:
+        if smtp_encryption == 'SSL':
+            server = smtplib.SMTP_SSL(smtp_server, smtp_port)
+        elif smtp_encryption == 'STARTTLS':
+            pass
+        elif smtp_encryption == 'NONE':
+            pass
+        server.login(smtp_address_from, smtp_password)
+        server.send_message(email)
+        server.quit()
+    except Exception:
+        print(sys.exc_info()[1])
+        return False
+    else:
+        return True
 
 @app.route('/')
 def index():
@@ -147,7 +175,12 @@ def signup():
                     db_session.rollback()
                 else:
                     flash('Registration successful', 'success')
-                    return redirect(url_for('index'))
+                    if send_registration_email(user_dict['email']):
+                        flash('An email sent to your mail address', 'success')
+                        return redirect(url_for('index'))
+                    else:
+                        flash('Error with sending email', 'danger')
+                        return redirect(url_for('signup'))
                 finally:
                     db_session.close()
             else:
